@@ -1,5 +1,7 @@
 import { useAuthors } from '../hooks/useAuthors';
 import { useState } from 'react';
+import { useCountries } from '../hooks/useCountries';
+import { MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import {
     Button,
     Dialog,
@@ -32,12 +34,27 @@ const AuthorsPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // const handleSubmit = () => {
+    //     const action = editingAuthor
+    //         ? update(editingAuthor.id, formData)
+    //         : create(formData);
+    //     action.then(() => handleClose());
+    // };
     const handleSubmit = () => {
+        const authorPayload = {
+            name: formData.name,
+            surname: formData.surname,
+            countryId: Number(formData.countryId),
+        };
+
         const action = editingAuthor
-            ? update(editingAuthor.id, formData)
-            : create(formData);
+            ? update(editingAuthor.id, authorPayload)
+            : create(authorPayload);
+
         action.then(() => handleClose());
     };
+
+    const { countries } = useCountries();
 
     return (
         <div>
@@ -48,7 +65,7 @@ const AuthorsPage = () => {
                     <TableRow>
                         <TableCell>Name</TableCell>
                         <TableCell>Surname</TableCell>
-                        <TableCell>Country ID</TableCell>
+                        <TableCell>Country name</TableCell>
                         <TableCell>Actions</TableCell>
                     </TableRow>
                 </TableHead>
@@ -57,7 +74,7 @@ const AuthorsPage = () => {
                         <TableRow key={author.id}>
                             <TableCell>{author.name}</TableCell>
                             <TableCell>{author.surname}</TableCell>
-                            <TableCell>{author.country?.id}</TableCell>
+                            <TableCell>{author.country?.name}</TableCell>
                             <TableCell>
                                 <Button onClick={() => handleOpen(author)}>Edit</Button>
                                 <Button color="error" onClick={() => remove(author.id)}>Delete</Button>
@@ -86,14 +103,22 @@ const AuthorsPage = () => {
                         onChange={handleChange}
                         margin="dense"
                     />
-                    <TextField
-                        label="Country ID"
-                        name="countryId"
-                        fullWidth
-                        value={formData.countryId}
-                        onChange={handleChange}
-                        margin="dense"
-                    />
+                    <FormControl fullWidth margin="dense">
+                        <InputLabel id="country-label">Country</InputLabel>
+                        <Select
+                            labelId="country-label"
+                            name="countryId"
+                            value={formData.countryId}
+                            onChange={handleChange}
+                            label="Country"
+                        >
+                            {countries.map((country) => (
+                                <MenuItem key={country.id} value={country.id}>
+                                    {country.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>

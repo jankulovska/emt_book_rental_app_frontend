@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import axios from 'axios';
 import { useBooks } from '../hooks/useBooks';
 import { useState } from 'react';
 import {
@@ -25,6 +27,8 @@ const BooksPage = () => {
         availableCopies: '',
     });
 
+
+
     const handleOpen = (book = null) => {
         setEditingBook(book);
         setFormData(book || {
@@ -42,11 +46,30 @@ const BooksPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = () => {
+        const bookData = {
+            name: formData.name,
+            category: formData.category,
+            author: { id: Number(formData.authorId) },
+            availableCopies: Number(formData.availableCopies),
+        };
+
         const action = editingBook
-            ? update(editingBook.id, formData)
-            : create(formData);
+            ? update(editingBook.id, bookData)
+            : create(bookData);
+
         action.then(() => handleClose());
     };
+
+
+    const categories = ['NOVEL', 'THRILLER', 'HISTORY', 'FANTASY', 'BIOGRAPHY', 'CLASSICS', 'DRAMA'];
+    const [authors, setAuthors] = useState([]);
+
+    useEffect(() => {
+        axios.get('http://localhost:8080/api/authors')
+            .then((res) => setAuthors(res.data))
+            .catch(console.error);
+    }, []);
+
 
     return (
         <div>
@@ -58,7 +81,7 @@ const BooksPage = () => {
                     <TableRow>
                         <TableCell>Name</TableCell>
                         <TableCell>Category</TableCell>
-                        <TableCell>Author ID</TableCell>
+                        <TableCell>Author name</TableCell>
                         <TableCell>Copies</TableCell>
                         <TableCell>Actions</TableCell>
                     </TableRow>
@@ -68,7 +91,7 @@ const BooksPage = () => {
                         <TableRow key={book.id}>
                             <TableCell>{book.name}</TableCell>
                             <TableCell>{book.category}</TableCell>
-                            <TableCell>{book.author?.id}</TableCell>
+                            <TableCell>{book.author?.name}</TableCell>
                             <TableCell>{book.availableCopies}</TableCell>
                             <TableCell>
                                 <Button onClick={() => handleOpen(book)}>Edit</Button>
@@ -91,21 +114,40 @@ const BooksPage = () => {
                         margin="dense"
                     />
                     <TextField
+                        select
                         label="Category"
                         name="category"
                         fullWidth
                         value={formData.category}
                         onChange={handleChange}
                         margin="dense"
-                    />
+                        SelectProps={{ native: true }}
+                    >
+                        <option value="">Select a category</option>
+                        {categories.map((cat) => (
+                            <option key={cat} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </TextField>
+
                     <TextField
-                        label="Author ID"
+                        select
+                        label="Author"
                         name="authorId"
                         fullWidth
                         value={formData.authorId}
                         onChange={handleChange}
                         margin="dense"
-                    />
+                        SelectProps={{ native: true }}
+                    >
+                        <option value="">Select an author</option>
+                        {authors.map((author) => (
+                            <option key={author.id} value={author.id}>
+                                {author.name} {author.surname}
+                            </option>
+                        ))}
+                    </TextField>
                     <TextField
                         label="Available Copies"
                         name="availableCopies"
